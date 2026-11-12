@@ -1,0 +1,106 @@
+/*
+
+main.scss -> main.css 
+
+File containes the overall site styles.
+
+*/
+
+
+/* 
+
+------------ Colors --------------
+
+*/
+
+// Body
+$body-color: #ffffff;
+$body-color-dark: #000000;
+
+// Borders
+$border-color: #000000;
+$border-color-dark: #ffffff;
+
+// Menus
+$menu-item-color: #000000;
+$menu-item-color-dark: #ffffff;
+$menu-item-hovor-color: #313131;
+$menu-item-hovor-color-dark: #c7c7c7;
+
+// Title
+$title-color: #000000;
+$title-color-dark: #ffffff;
+
+// Text
+$text-color: #000000;
+$text-color-dark: #ffffff;
+
+// Lists
+$list-color: #000000;
+$list-color-dark: #ffffff;
+
+// Copyright or other mildly important text
+$faded-text-color: #0000003b;
+$faded-text-color-dark: #ffffff3b;
+
+/* 
+
+------------ Site-Wide --------------
+
+*/
+
+// Light-dark mode
+:root {
+	color-scheme: light dark;
+}
+
+body {
+	// Background
+	background-color: light-dark($body-color, $body-color-dark);
+
+	// Font
+	font-family: sans-serif;
+	font-weight: 400;
+	font-size: larger;
+	&p {
+		color: light-dark($text-color, $text-color-dark);
+	}
+
+	// Display
+	display: flex;
+	width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	padding: 0;
+
+	// Layout/Alighnment
+	justify-content: center;
+	align-items: stretch;
+}
+
+/* 
+
+------------ Site-Wide --------------
+
+*/
+
+#page {
+	// Background
+	background-color: light-dark($body-color, $body-color-dark);
+
+	// Display
+	display: grid;
+	//max-width: none;
+	max-width: 100vw;
+	width: 100%;
+	//max-height: none;
+	max-height: 100vh;
+	height: 100dvh;
+	overflow: hidden;
+	padding: 0;
+
+	// Layout/Alignment
+	position: relative;
+	grid-template-areas: 
+	"";
+}
