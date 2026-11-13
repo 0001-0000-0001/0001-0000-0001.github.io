@@ -52,6 +52,7 @@ function resizeRenderToDisplaySize(renderer, maxPixelCount=3840*2160) {
       const needResize = canvas.width !== width || canvas.height !== height;
       if (needResize) {
         renderer.setSize(width, height, false);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       }
       return needResize;
 }
