@@ -1,0 +1,188 @@
+/*
+
+main.scss -> main.css 
+
+File containes the overall site styles.
+
+*/
+
+
+/* 
+
+------------ Colors --------------
+
+*/
+
+// Body
+$body-color: #ffffff;
+$body-color-dark: #1d1d1d;
+
+// Borders
+$border-color: #000000;
+$border-color-dark: #ffffff;
+
+// Menus
+$menu-item-color: #000000;
+$menu-item-color-dark: #ffffff80;
+$menu-item-hovor-color: #313131;
+$menu-item-hovor-color-dark: #ffffffc7;
+
+// Title
+$title-color: #000000;
+$title-color-dark: #ffffff;
+
+// Text
+$text-color: #000000;
+$text-color-dark: #ffffffa9;
+
+// Lists
+$list-color: #000000;
+$list-color-dark: #ffffff;
+
+// Copyright or other mildly important text
+$faded-text-color: #0000003b;
+$faded-text-color-dark: #ffffff3b;
+
+/* 
+
+------------ Site-Wide --------------
+
+*/
+
+// Light-dark mode
+:root {
+	color-scheme: light dark;
+}
+
+body {
+	// Background
+	background-color: light-dark($body-color, $body-color-dark);
+
+	// Font
+	font-family: sans-serif;
+	font-weight: 400;
+	font-size: larger;
+	&p {
+		color: light-dark($text-color, $text-color-dark);
+	}
+
+	// Display
+	display: flex;
+	width: 100%;
+	min-height: 100vh;
+	margin: 0;
+	padding: 0;
+
+	// Layout/Alignment
+	justify-content: center;
+	align-items: stretch;
+}
+
+/* 
+
+------------ Site-Wide --------------
+
+*/
+
+#page {
+	// Background
+	background-color: light-dark($body-color, $body-color-dark);
+
+	// Display
+	display: grid;
+	//max-width: none;
+	max-width: 100vw;
+	width: 100%;
+	//max-height: none;
+	max-height: 100vh;
+	height: 100dvh;
+	overflow: hidden;
+	padding: 0;
+
+	// Layout/Alignment
+	position: relative;
+	grid-template-areas: 
+	"nb nb nb"
+	"cc cc cc"
+	"ft ft ft";
+	grid-template-rows: 5% 90% 5%;
+	grid-template-columns: 5% 90% 5%;
+
+	#nb {
+		grid-area: nb;
+	}
+
+	#cubeContainer {
+		grid-area: cc;
+	}
+
+	#ft {
+		grid-area: ft;
+	}
+}
+
+/* 
+
+------------ Navbar --------------
+
+*/
+
+.navbar {
+	// Display
+	display: flex;
+	a {
+		text-decoration: none;
+		color: light-dark($menu-item-color, $menu-item-color-dark);
+		&:hover {
+			color: light-dark($menu-item-hovor-color, $menu-item-hovor-color-dark);
+		}
+	}
+
+	// Layout/Alignment
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 2;
+}
+
+/* 
+
+------------ Three.js Canvas --------------
+
+*/
+
+.threeContainer {
+	// Display
+	display: flex;
+
+	// Layout/Alignment
+	flex-direction: column;
+	justify-content: center;
+	padding: 20px;
+}
+
+.threeCanvas {
+	padding: 20px;
+	z-index: 1;
+}
+
+/* 
+
+------------ Footer --------------
+
+*/
+
+.footer {
+	// Display
+	display: flex;
+	p {
+		font-size: xx-small;
+		color: light-dark($faded-text-color, $faded-text-color-dark);
+	}
+
+	// Layout/Alignment
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 2;
+}

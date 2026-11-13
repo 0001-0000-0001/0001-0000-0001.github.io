@@ -1,0 +1,108 @@
+/*
+
+main.scss -> main.css 
+
+File containes the overall site styles.
+
+*/
+/* 
+
+------------ Colors --------------
+
+*/
+/* 
+
+------------ Site-Wide --------------
+
+*/
+:root {
+  color-scheme: light dark; }
+
+body {
+  background-color: light-dark(#ffffff, #1d1d1d);
+  font-family: sans-serif;
+  font-weight: 400;
+  font-size: larger;
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  justify-content: center;
+  align-items: stretch; }
+  bodyp {
+    color: light-dark(#000000, #ffffffa9); }
+
+/* 
+
+------------ Site-Wide --------------
+
+*/
+#page {
+  background-color: light-dark(#ffffff, #1d1d1d);
+  display: grid;
+  max-width: 100vw;
+  width: 100%;
+  max-height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+  grid-template-areas: "nb nb nb" "cc cc cc" "ft ft ft";
+  grid-template-rows: 5% 90% 5%;
+  grid-template-columns: 5% 90% 5%; }
+  #page #nb {
+    grid-area: nb; }
+  #page #cubeContainer {
+    grid-area: cc; }
+  #page #ft {
+    grid-area: ft; }
+
+/* 
+
+------------ Navbar --------------
+
+*/
+.navbar {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  z-index: 2; }
+  .navbar a {
+    text-decoration: none;
+    color: light-dark(#000000, #ffffff80); }
+    .navbar a:hover {
+      color: light-dark(#313131, #ffffffc7); }
+
+/* 
+
+------------ Three.js Canvas --------------
+
+*/
+.threeContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px; }
+
+.threeCanvas {
+  padding: 20px;
+  z-index: 1; }
+
+/* 
+
+------------ Footer --------------
+
+*/
+.footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  z-index: 2; }
+  .footer p {
+    font-size: xx-small;
+    color: light-dark(#0000003b, #ffffff3b); }
+
+/*# sourceMappingURL=main.css.map */
