@@ -1,10 +1,8 @@
-# Astro Starter Kit: Basics
+# Astro Starter
 
 ```sh
-npm create astro@latest -- --template basics
+npm create astro@latest
 ```
-
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
 ## 🚀 Project Structure
 
@@ -28,7 +26,7 @@ Inside of your Astro project, you'll see the following folders and files:
 
 To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
 
-## 🧞 Commands
+## 🧞 ASTRO Commands
 
 All commands are run from the root of the project, from a terminal:
 
@@ -41,6 +39,41 @@ All commands are run from the root of the project, from a terminal:
 | `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
 | `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-## 👀 Want to learn more?
+See the Astro [documentation](https://docs.astro.build) for more.
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+
+---
+<br><br>
+
+
+# Three.js Starter
+
+```sh
+# three.js
+npm install --save three
+
+# vite
+npm install --save-dev vite
+```
+
+## Basic `main.js` starter file
+
+```js
+import * as THREE from 'three';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize( window.innerWidth, window.innerHeight );
+document.body.appendChild( renderer.domElement );
+```
+
+
+# Three.js Commands
+
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npx vite`             | Starts local dev server at `localhost:5173`      |
+| `npx vite build`           | Compile everything used but the application, optimize and copy into the `dist/` folder.  |
