@@ -1,0 +1,13 @@
+---
+var { year } = Astro.props;
+
+year = new Date().getFullYear()
+---
+
+<div class="footer" id="ft">
+	<p>
+		&copy; &nbsp;
+		<span>{year}</span> &nbsp;
+		Mucus Interactive | All Rights Reserved
+	</p>
+</div>

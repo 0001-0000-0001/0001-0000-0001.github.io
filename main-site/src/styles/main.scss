@@ -15,7 +15,7 @@ File containes the overall site styles.
 
 // Body
 $body-color: #ffffff;
-$body-color-dark: #000000;
+$body-color-dark: #1d1d1d;
 
 // Borders
 $border-color: #000000;
@@ -23,9 +23,9 @@ $border-color-dark: #ffffff;
 
 // Menus
 $menu-item-color: #000000;
-$menu-item-color-dark: #ffffff;
+$menu-item-color-dark: #ffffff80;
 $menu-item-hovor-color: #313131;
-$menu-item-hovor-color-dark: #c7c7c7;
+$menu-item-hovor-color-dark: #ffffffc7;
 
 // Title
 $title-color: #000000;
@@ -33,7 +33,7 @@ $title-color-dark: #ffffff;
 
 // Text
 $text-color: #000000;
-$text-color-dark: #ffffff;
+$text-color-dark: #ffffffa9;
 
 // Lists
 $list-color: #000000;
@@ -73,7 +73,7 @@ body {
 	margin: 0;
 	padding: 0;
 
-	// Layout/Alighnment
+	// Layout/Alignment
 	justify-content: center;
 	align-items: stretch;
 }
@@ -102,5 +102,87 @@ body {
 	// Layout/Alignment
 	position: relative;
 	grid-template-areas: 
-	"";
+	"nb nb nb"
+	"cc cc cc"
+	"ft ft ft";
+	grid-template-rows: 5% 90% 5%;
+	grid-template-columns: 5% 90% 5%;
+
+	#nb {
+		grid-area: nb;
+	}
+
+	#cubeContainer {
+		grid-area: cc;
+	}
+
+	#ft {
+		grid-area: ft;
+	}
+}
+
+/* 
+
+------------ Navbar --------------
+
+*/
+
+.navbar {
+	// Display
+	display: flex;
+	a {
+		text-decoration: none;
+		color: light-dark($menu-item-color, $menu-item-color-dark);
+		&:hover {
+			color: light-dark($menu-item-hovor-color, $menu-item-hovor-color-dark);
+		}
+	}
+
+	// Layout/Alignment
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 2;
+}
+
+/* 
+
+------------ Three.js Canvas --------------
+
+*/
+
+.threeContainer {
+	// Display
+	display: flex;
+
+	// Layout/Alignment
+	flex-direction: column;
+	justify-content: center;
+	padding: 20px;
+}
+
+.threeCanvas {
+	padding: 20px;
+	z-index: 1;
+}
+
+/* 
+
+------------ Footer --------------
+
+*/
+
+.footer {
+	// Display
+	display: flex;
+	p {
+		font-size: xx-small;
+		color: light-dark($faded-text-color, $faded-text-color-dark);
+	}
+
+	// Layout/Alignment
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	z-index: 2;
 }
