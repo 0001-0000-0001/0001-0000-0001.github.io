@@ -4,6 +4,7 @@ import * as THREE from 'three';
 const canvas = document.querySelector('#cube');
 const renderer = new THREE.WebGLRenderer({alpha: true, antialias: true, canvas});
 renderer.setClearColor(0x000000, 0);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 // Camera
 const fov = 75;
@@ -40,21 +41,20 @@ scene.add(cube);
 
 // Check canvas size against render size
 function resizeRenderToDisplaySize(renderer, maxPixelCount=3840*2160) {
-      const canvas = renderer.domElement;
-      const pixelRatio = window.devicePixelRatio;
-      let width  = Math.floor( canvas.clientWidth  * pixelRatio );
-      let height = Math.floor( canvas.clientHeight * pixelRatio );
-      const pixelCount = width * height;
-      const renderScale = pixelCount > maxPixelCount ? Math.sqrt(maxPixelCount / pixelCount) : 1;
-      width = Math.floor(width * renderScale);
-      height = Math.floor(height * renderScale);
- 
-      const needResize = canvas.width !== width || canvas.height !== height;
-      if (needResize) {
-        renderer.setSize(width, height, false);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      }
-      return needResize;
+  const canvas = renderer.domElement;
+  const pixelRatio = window.devicePixelRatio;
+  let width  = Math.floor( canvas.clientWidth  * pixelRatio );
+  let height = Math.floor( canvas.clientHeight * pixelRatio );
+  const pixelCount = width * height;
+  const renderScale = pixelCount > maxPixelCount ? Math.sqrt(maxPixelCount / pixelCount) : 1;
+  width = Math.floor(width * renderScale);
+  height = Math.floor(height * renderScale);
+
+  const needResize = canvas.width !== width || canvas.height !== height;
+  if (needResize) {
+    renderer.setSize(width, height, false);
+  }
+  return needResize;
 }
 
 // Render with animation
