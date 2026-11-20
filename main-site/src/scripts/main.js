@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 // Get canvas and create renderer
 const canvas = document.querySelector('#cube');
@@ -14,13 +15,14 @@ const far = 5;
 const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 camera.position.z = 2;
 
+// Scene
 const scene = new THREE.Scene();
 
 // Light
 const color = 0xFFFFFF;
 const intensity = 3;
 const light = new THREE.DirectionalLight(color, intensity);
-light.position.set(-2, 1, 4);
+light.position.set(camera.position.x, camera.position.y, camera.position.z);
 
 scene.add(light);
 
@@ -36,8 +38,55 @@ const cube = new THREE.Mesh(geometry, material);
 // Init cube position
 // cube.rotation.x = 0.30;
 // cube.rotation.y = -0.35;
-
 scene.add(cube);
+
+// Controls
+const controls = new OrbitControls(camera, renderer.domElement);
+
+// Interaction events
+var timer = null;
+var startTime = 0;
+const cntlStart = 'start';
+var waitDuration = 3;
+const cntlEnd = 'end';
+var endTime = 0;
+
+controls.cursorStyle = 'grab';
+// Disable undesired controls
+controls.enablePan = false;
+controls.enableZoom = false;
+// Auto Rotate Camera around target
+controls.autoRotate = true;
+controls.autoRotateSpeed = -0.5;
+
+controls.update();
+
+// -------------------------------- Lifecycle -------------------------------
+
+// Render with animation
+function render() {
+  // Update Timer
+
+  // Check if resize
+	if (resizeRenderToDisplaySize(renderer)){
+		const canvas = renderer.domElement;
+		camera.aspect = canvas.clientWidth / canvas.clientHeight;
+		camera.updateProjectionMatrix();
+	}
+
+  // Update controls and set light pos to current camera pos
+  if (timer !== null) console.log("MEEP MORP");
+  controls.update();
+  light.position.set(camera.position.x, camera.position.y, camera.position.z);
+
+	renderer.render(scene, camera);
+
+	requestAnimationFrame(render);
+}
+
+requestAnimationFrame(render);
+
+// ----------------- Utils -------------------------
 
 // Check canvas size against render size
 function resizeRenderToDisplaySize(renderer, maxPixelCount=3840*2160) {
@@ -57,22 +106,16 @@ function resizeRenderToDisplaySize(renderer, maxPixelCount=3840*2160) {
   return needResize;
 }
 
-// Render with animation
-function render(time) {
-	time *= 0.0001;
+// ---------------- Event Callbacks ------------------
 
-	if (resizeRenderToDisplaySize(renderer)){
-		const canvas = renderer.domElement;
-		camera.aspect = canvas.clientWidth / canvas.clientHeight;
-		camera.updateProjectionMatrix();
-	}
+// On interaction, stop rotation
+controls.addEventListener(cntlStart, (event) => {
+  // Stop rotation
+  controls.autoRotate = false;
+  //TODO: Set start time
+  
+});
 
-	cube.rotation.y = time;
-	cube.rotation.x = -time;
-
-	renderer.render(scene, camera);
-
-	requestAnimationFrame(render);
-}
-
-requestAnimationFrame(render);
+controls.addEventListener(cntlEnd, (event) => {
+  //TODO: Set end time
+});
