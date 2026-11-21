@@ -24,6 +24,8 @@ const lightInten = 1;
 let renderer : THREE.WebGLRenderer | null = null;
 let timer : THREE.Timer | null = null;
 
+// TODO: External mesh object with menu popouts?
+
 // Mesh
 let cube : THREE.Mesh | null = null;
 let cubeMat = new THREE.MeshPhongMaterial(
@@ -44,10 +46,14 @@ let isInteracting : boolean = false;
 const waitDuration = 3;
 var endTime = 0;
 
-// Raycast
-let raycast : THREE.Raycaster | null = null;
-let rayDir = new THREE.Vector2(0, 0)
-let rayVisualizer : THREE.ArrowHelper | null = null;
+// Raycasts
+let centerRay : THREE.Raycaster | null = null; // For cube animation
+let centerPos = new THREE.Vector2(0, 0);
+
+let raycast : THREE.Raycaster | null = null; // For user interaction
+let mousePos = new THREE.Vector2(0, 0);
+
+// let rayVisualizer : THREE.ArrowHelper | null = null; // DEBUG ONLY
 
 function main() {
 
@@ -98,7 +104,8 @@ function main() {
 
 		controls.update();
 
-		// Raycast
+		// Raycasts
+		centerRay = new THREE.Raycaster(camera.position);
 		raycast = new THREE.Raycaster(camera.position);
 	}
 
@@ -110,14 +117,21 @@ function main() {
 
 	*/
 
-	const cntlStart = 'start';
-	const cntlEnd = 'end';
+	//----------------- Mouse movement
+	document.addEventListener('mousemove', (event) => {
+		event.preventDefault();
+		mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+		mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+	});
+
+	// ---------------- Camera grab/move 'start' and 'end'
 
 	// On interaction, stop rotation
-	controls?.addEventListener(cntlStart, (event) => {
-		// Stop rotation
+	controls?.addEventListener('start', () => {
+		// Stop rotation, create timer, set interaction bool
 		if (controls == null) return;
 		controls.autoRotate = false;
+
 		if (timer == null){
 			timer = new THREE.Timer();
 		}
@@ -125,7 +139,8 @@ function main() {
 		isInteracting = true;
 	});
 
-	controls?.addEventListener(cntlEnd, (event) => {
+	controls?.addEventListener('end', () => {
+		// Set end interaction time and set interaction bool
 		if (timer == null) return;
 		endTime = timer.getElapsed();
 		isInteracting = false;
@@ -174,12 +189,22 @@ function main() {
 		controls.update();
 		light?.position.set(camera.position.x, camera.position.y, camera.position.z);
 
-		raycast?.setFromCamera(rayDir, camera);
-		const intsect = raycast?.intersectObject(cube);
+		// Center Ray for Cube Animations
+		centerRay?.setFromCamera(centerPos, camera);
+		const centerInter = centerRay?.intersectObject(cube);
 
-		if (intsect != null && intsect.length > 0){
-			const hit = intsect[0];
-			//console.log("Inter: ", hit);
+		if (centerInter != null && centerInter.length > 0){
+			const hit = centerInter[0];
+			// console.log("Center Inter: ", hit);
+		}
+
+		// Interaction Ray
+		raycast?.setFromCamera(mousePos, camera);
+		const interac = raycast?.intersectObject(cube);
+
+		if (interac != null && interac.length > 0){
+			const hit = interac[0];
+			// console.log("Interac: ", hit);
 		}
 		
 		renderer.render(scene, camera);
@@ -200,19 +225,19 @@ main();
 
 // Check canvas size against render size
 function resizeRenderToDisplaySize(renderer : THREE.WebGLRenderer, maxPixelCount=3840*2160) {
-  const canvas = renderer.domElement;
-  const pixelRatio = window.devicePixelRatio;
-  let width  = Math.floor( canvas.clientWidth  * pixelRatio );
-  let height = Math.floor( canvas.clientHeight * pixelRatio );
-  const pixelCount = width * height;
-  const renderScale = pixelCount > maxPixelCount ? Math.sqrt(maxPixelCount / pixelCount) : 1;
-  width = Math.floor(width * renderScale);
-  height = Math.floor(height * renderScale);
+	const canvas = renderer.domElement;
+	const pixelRatio = window.devicePixelRatio;
+	let width  = Math.floor( canvas.clientWidth  * pixelRatio );
+	let height = Math.floor( canvas.clientHeight * pixelRatio );
+	const pixelCount = width * height;
+	const renderScale = pixelCount > maxPixelCount ? Math.sqrt(maxPixelCount / pixelCount) : 1;
+	width = Math.floor(width * renderScale);
+	height = Math.floor(height * renderScale);
 
-  const needResize = canvas.width !== width || canvas.height !== height;
-  if (needResize) {
+	const needResize = canvas.width !== width || canvas.height !== height;
+	if (needResize) {
 	renderer.setSize(width, height, false);
-  }
-  return needResize;
+	}
+	return needResize;
 }
 
