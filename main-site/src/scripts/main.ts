@@ -32,16 +32,22 @@ let cubeMat = new THREE.MeshPhongMaterial(
 		specular: 0xfefefe,
 		shininess: 10,
 	}
-)
+);
 const bW = 1;
 const bH = 1;
 const bD = 1;
 const boxGeo = new THREE.BoxGeometry(bW, bH, bD);
 
+// Interaction
 let controls : OrbitControls | null = null;
 let isInteracting : boolean = false;
-var waitDuration = 3;
+const waitDuration = 3;
 var endTime = 0;
+
+// Raycast
+let raycast : THREE.Raycaster | null = null;
+let rayDir = new THREE.Vector2(0, 0)
+let rayVisualizer : THREE.ArrowHelper | null = null;
 
 function main() {
 
@@ -91,6 +97,9 @@ function main() {
 		controls.autoRotateSpeed = -0.5;
 
 		controls.update();
+
+		// Raycast
+		raycast = new THREE.Raycaster(camera.position);
 	}
 
 	init();
@@ -131,7 +140,13 @@ function main() {
 	// Render with animation
 	function animate() {
 		// Pre Checks
-		if (camera == null || controls == null || renderer == null || scene == null) return;
+		if (
+			camera == null || 
+			controls == null || 
+			renderer == null || 
+			scene == null ||
+			cube == null
+		) return;
 
 		// Update Timer
 		var currentTime = 0;
@@ -159,9 +174,17 @@ function main() {
 		controls.update();
 		light?.position.set(camera.position.x, camera.position.y, camera.position.z);
 
-			renderer.render(scene, camera);
+		raycast?.setFromCamera(rayDir, camera);
+		const intsect = raycast?.intersectObject(cube);
 
-			requestAnimationFrame(animate);
+		if (intsect != null && intsect.length > 0){
+			const hit = intsect[0];
+			//console.log("Inter: ", hit);
+		}
+		
+		renderer.render(scene, camera);
+
+		requestAnimationFrame(animate);
 	}
 
 	requestAnimationFrame(animate);
