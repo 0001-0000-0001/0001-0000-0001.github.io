@@ -8,16 +8,39 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 */
 
 let scene : THREE.Scene | null = null;
+
+// Camera
 let camera : THREE.PerspectiveCamera | null = null;
+const fov = 75;
+const aspect = 2;
+const near = 0.1;
+const far = 3;
+
+// Light
 let light : THREE.DirectionalLight | null = null;
+const lightColor = 0xfefefe;
+const lightInten = 1;
+
 let renderer : THREE.WebGLRenderer | null = null;
 let timer : THREE.Timer | null = null;
+
+// Mesh
 let cube : THREE.Mesh | null = null;
+let cubeMat = new THREE.MeshPhongMaterial(
+	{
+		color: 0x0f0f0f,
+		specular: 0xfefefe,
+		shininess: 10,
+	}
+)
+const bW = 1;
+const bH = 1;
+const bD = 1;
+const boxGeo = new THREE.BoxGeometry(bW, bH, bD);
 
 let controls : OrbitControls | null = null;
-
-var startTime = 0;
-var waitDuration = 0;
+let isInteracting : boolean = false;
+var waitDuration = 3;
 var endTime = 0;
 
 function main() {
@@ -29,7 +52,6 @@ function main() {
 	*/
 
 	function init() {
-
 		// Get canvas and create renderer
 		const canvas = document.querySelector('#cube');
 		if (canvas == null){
@@ -41,10 +63,6 @@ function main() {
 		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
 		// Camera
-		const fov = 75;
-		const aspect = 2;
-		const near = 0.1;
-		const far = 5;
 		camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 		camera.position.z = 2;
 
@@ -52,25 +70,13 @@ function main() {
 		scene = new THREE.Scene();
 
 		// Light
-		const color = 0xFFFFFF;
-		const intensity = 3;
-		light = new THREE.DirectionalLight(color, intensity);
+		light = new THREE.DirectionalLight(lightColor, lightInten);
 		light.position.set(camera.position.x, camera.position.y, camera.position.z);
 
 		scene.add(light);
 
-		// Box geo and mat
-		const bW = 1;
-		const bH = 1;
-		const bD = 1;
-		const geometry = new THREE.BoxGeometry(bW, bH, bD);
-		const material = new THREE.MeshPhongMaterial({color: 0x0d9945});
-
 		// Cube mesh
-		cube = new THREE.Mesh(geometry, material);
-		// Init cube position
-		// cube.rotation.x = 0.30;
-		// cube.rotation.y = -0.35;
+		cube = new THREE.Mesh(boxGeo, cubeMat);
 		scene.add(cube);
 
 		// Controls
@@ -89,8 +95,6 @@ function main() {
 
 	init();
 
-	//TODO: These event connections are not working
-	//BUG
 	/* 
 	
 	------------------- Event Connections -------------------
@@ -109,12 +113,13 @@ function main() {
 			timer = new THREE.Timer();
 		}
 		timer.update();
-		startTime = timer.getElapsed();
+		isInteracting = true;
 	});
 
 	controls?.addEventListener(cntlEnd, (event) => {
 		if (timer == null) return;
 		endTime = timer.getElapsed();
+		isInteracting = false;
 	});
 
 	/* 
@@ -143,7 +148,7 @@ function main() {
 		}
 
 		// Update controls and set light pos to current camera pos
-		if (timer !== null && currentTime > endTime + waitDuration){
+		if (timer !== null && (!isInteracting) && (currentTime > endTime + waitDuration)){
 			controls.autoRotate = true;
 			timer.dispose();
 			timer = null;
@@ -164,7 +169,11 @@ function main() {
 
 main();
 
-// ----------------- Utils -------------------------
+/*
+
+---------------------- Utils -------------------------
+
+*/
 
 // Check canvas size against render size
 function resizeRenderToDisplaySize(renderer : THREE.WebGLRenderer, maxPixelCount=3840*2160) {
