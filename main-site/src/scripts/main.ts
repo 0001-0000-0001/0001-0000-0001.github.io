@@ -8,156 +8,236 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 */
 
 let scene : THREE.Scene | null = null;
-let camera : THREE.Camera | null = null;
+
+// Camera
+let camera : THREE.PerspectiveCamera | null = null;
+const fov = 75;
+const aspect = 2;
+const near = 0.1;
+const far = 3;
+
+// Light
 let light : THREE.DirectionalLight | null = null;
+const lightColor = 0xfefefe;
+const lightInten = 1;
+
 let renderer : THREE.WebGLRenderer | null = null;
 let timer : THREE.Timer | null = null;
+
+// TODO: External mesh object with menu popouts?
+
+// Mesh
 let cube : THREE.Mesh | null = null;
+let cubeMat = new THREE.MeshPhongMaterial(
+	{
+		color: 0x0f0f0f,
+		specular: 0xfefefe,
+		shininess: 10,
+	}
+);
+const bW = 1;
+const bH = 1;
+const bD = 1;
+const boxGeo = new THREE.BoxGeometry(bW, bH, bD);
 
+// Interaction
 let controls : OrbitControls | null = null;
-
-var startTime = 0;
-var waitDuration = 0;
+let isInteracting : boolean = false;
+const waitDuration = 3;
 var endTime = 0;
 
-function init() {
+// Raycasts
+let centerRay : THREE.Raycaster | null = null; // For cube animation
+let centerPos = new THREE.Vector2(0, 0);
 
-	// Get canvas and create renderer
-	const canvas = document.querySelector('#cube');
-	if (canvas == null){
-		console.error("canvas is null");
-		return;
+let raycast : THREE.Raycaster | null = null; // For user interaction
+let mousePos = new THREE.Vector2(0, 0);
+
+// let rayVisualizer : THREE.ArrowHelper | null = null; // DEBUG ONLY
+
+function main() {
+
+	/*
+
+	---------------- Lifecycle ------------------
+
+	*/
+
+	function init() {
+		// Get canvas and create renderer
+		const canvas = document.querySelector('#cube');
+		if (canvas == null){
+			console.error("canvas is null");
+			return;
+		}
+		renderer = new THREE.WebGLRenderer({alpha: true, antialias: true, canvas});
+		renderer.setClearColor(0x000000, 0);
+		renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+		// Camera
+		camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+		camera.position.z = 2;
+
+		// Scene
+		scene = new THREE.Scene();
+
+		// Light
+		light = new THREE.DirectionalLight(lightColor, lightInten);
+		light.position.set(camera.position.x, camera.position.y, camera.position.z);
+
+		scene.add(light);
+
+		// Cube mesh
+		cube = new THREE.Mesh(boxGeo, cubeMat);
+		scene.add(cube);
+
+		// Controls
+		controls = new OrbitControls(camera, renderer.domElement);
+
+		controls.cursorStyle = 'grab';
+		// Disable undesired controls
+		controls.enablePan = false;
+		controls.enableZoom = false;
+		// Auto Rotate Camera around target
+		controls.autoRotate = true;
+		controls.autoRotateSpeed = -0.5;
+
+		controls.update();
+
+		// Raycasts
+		centerRay = new THREE.Raycaster(camera.position);
+		raycast = new THREE.Raycaster(camera.position);
 	}
-	renderer = new THREE.WebGLRenderer({alpha: true, antialias: true, canvas});
-	renderer.setClearColor(0x000000, 0);
-	renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-	// Camera
-	const fov = 75;
-	const aspect = 2;
-	const near = 0.1;
-	const far = 5;
-	camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-	camera.position.z = 2;
+	init();
 
-	// Scene
-	scene = new THREE.Scene();
+	/* 
+	
+	------------------- Event Connections -------------------
 
-	// Light
-	const color = 0xFFFFFF;
-	const intensity = 3;
-	light = new THREE.DirectionalLight(color, intensity);
-	light.position.set(camera.position.x, camera.position.y, camera.position.z);
+	*/
 
-	scene.add(light);
+	//----------------- Mouse movement
+	document.addEventListener('mousemove', (event) => {
+		event.preventDefault();
+		mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+		mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+	});
 
-	// Box geo and mat
-	const bW = 1;
-	const bH = 1;
-	const bD = 1;
-	const geometry = new THREE.BoxGeometry(bW, bH, bD);
-	const material = new THREE.MeshPhongMaterial({color: 0x0d9945});
+	// ---------------- Camera grab/move 'start' and 'end'
 
-	// Cube mesh
-	cube = new THREE.Mesh(geometry, material);
-	// Init cube position
-	// cube.rotation.x = 0.30;
-	// cube.rotation.y = -0.35;
-	scene.add(cube);
+	// On interaction, stop rotation
+	controls?.addEventListener('start', () => {
+		// Stop rotation, create timer, set interaction bool
+		if (controls == null) return;
+		controls.autoRotate = false;
 
-	// Controls
-	controls = new OrbitControls(camera, renderer.domElement);
+		if (timer == null){
+			timer = new THREE.Timer();
+		}
+		timer.update();
+		isInteracting = true;
+	});
 
-	controls.cursorStyle = 'grab';
-	// Disable undesired controls
-	controls.enablePan = false;
-	controls.enableZoom = false;
-	// Auto Rotate Camera around target
-	controls.autoRotate = true;
-	controls.autoRotateSpeed = -0.5;
+	controls?.addEventListener('end', () => {
+		// Set end interaction time and set interaction bool
+		if (timer == null) return;
+		endTime = timer.getElapsed();
+		isInteracting = false;
+	});
 
-	controls.update();
+	/* 
+	
+	------------------- Main Loop -------------------
+
+	*/
+
+	// Render with animation
+	function animate() {
+		// Pre Checks
+		if (
+			camera == null || 
+			controls == null || 
+			renderer == null || 
+			scene == null ||
+			cube == null
+		) return;
+
+		// Update Timer
+		var currentTime = 0;
+		if (timer !== null){
+			timer.update();
+			currentTime = timer.getElapsed();
+		}
+
+		// Check if resize
+		if (resizeRenderToDisplaySize(renderer)){
+			const canvas = renderer?.domElement;
+			camera.aspect = canvas.clientWidth / canvas.clientHeight;
+			camera.updateProjectionMatrix();
+		}
+
+		// Update controls and set light pos to current camera pos
+		if (timer !== null && (!isInteracting) && (currentTime > endTime + waitDuration)){
+			controls.autoRotate = true;
+			timer.dispose();
+			timer = null;
+			currentTime = 0;
+			endTime = 0;
+		}
+		
+		controls.update();
+		light?.position.set(camera.position.x, camera.position.y, camera.position.z);
+
+		// Center Ray for Cube Animations
+		centerRay?.setFromCamera(centerPos, camera);
+		const centerInter = centerRay?.intersectObject(cube);
+
+		if (centerInter != null && centerInter.length > 0){
+			const hit = centerInter[0];
+			// console.log("Center Inter: ", hit);
+		}
+
+		// Interaction Ray
+		raycast?.setFromCamera(mousePos, camera);
+		const interac = raycast?.intersectObject(cube);
+
+		if (interac != null && interac.length > 0){
+			const hit = interac[0];
+			// console.log("Interac: ", hit);
+		}
+		
+		renderer.render(scene, camera);
+
+		requestAnimationFrame(animate);
+	}
+
+	requestAnimationFrame(animate);
 }
+
+main();
 
 /*
 
----------------- Lifecycle ------------------
+---------------------- Utils -------------------------
 
 */
 
-// Render with animation
-function render() {
-	// Pre Checks
-	if (camera == null || controls == null || renderer == null || scene == null) return;
-
-  // Update Timer
-  var currentTime = 0;
-  if (timer !== null){
-	timer.update();
-	currentTime = timer.getElapsed();
-  }
-
-  // Check if resize
-	if (resizeRenderToDisplaySize(renderer)){
-		const canvas = renderer?.domElement;
-		camera.aspect = canvas.clientWidth / canvas.clientHeight;
-		camera.updateProjectionMatrix();
-	}
-
-  // Update controls and set light pos to current camera pos
-  if (timer !== null && currentTime > endTime + waitDuration){
-	controls.autoRotate = true;
-	timer.dispose();
-	timer = null;
-	currentTime = 0;
-	endTime = 0;
-  }
-  controls.update();
-  light?.position.set(camera.position.x, camera.position.y, camera.position.z);
-
-	renderer.render(scene, camera);
-
-	requestAnimationFrame(render);
-}
-
-requestAnimationFrame(render);
-
-// ----------------- Utils -------------------------
-
 // Check canvas size against render size
 function resizeRenderToDisplaySize(renderer : THREE.WebGLRenderer, maxPixelCount=3840*2160) {
-  const canvas = renderer.domElement;
-  const pixelRatio = window.devicePixelRatio;
-  let width  = Math.floor( canvas.clientWidth  * pixelRatio );
-  let height = Math.floor( canvas.clientHeight * pixelRatio );
-  const pixelCount = width * height;
-  const renderScale = pixelCount > maxPixelCount ? Math.sqrt(maxPixelCount / pixelCount) : 1;
-  width = Math.floor(width * renderScale);
-  height = Math.floor(height * renderScale);
+	const canvas = renderer.domElement;
+	const pixelRatio = window.devicePixelRatio;
+	let width  = Math.floor( canvas.clientWidth  * pixelRatio );
+	let height = Math.floor( canvas.clientHeight * pixelRatio );
+	const pixelCount = width * height;
+	const renderScale = pixelCount > maxPixelCount ? Math.sqrt(maxPixelCount / pixelCount) : 1;
+	width = Math.floor(width * renderScale);
+	height = Math.floor(height * renderScale);
 
-  const needResize = canvas.width !== width || canvas.height !== height;
-  if (needResize) {
+	const needResize = canvas.width !== width || canvas.height !== height;
+	if (needResize) {
 	renderer.setSize(width, height, false);
-  }
-  return needResize;
+	}
+	return needResize;
 }
 
-// ---------------- Event Callbacks ------------------
-
-// On interaction, stop rotation
-controls.addEventListener(cntlStart, (event) => {
-  // Stop rotation
-  controls.autoRotate = false;
-  //TODO: Set start time
-  if (timer == null){
-	timer = new THREE.Timer();
-  }
-  timer.update();
-  startTime = timer.getElapsed();
-});
-
-controls.addEventListener(cntlEnd, (event) => {
-  //TODO: Set end time
-  if (timer == null) return;
-  endTime = timer.getElapsed();
-});
