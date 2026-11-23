@@ -19,7 +19,7 @@ File containes the overall site styles.
   color-scheme: light dark; }
 
 body {
-  background-color: light-dark(#ffffff, #1d1d1d);
+  background-color: light-dark(#ffffff, #000000);
   font-family: sans-serif;
   font-weight: 400;
   font-size: larger;
@@ -39,7 +39,7 @@ body {
 
 */
 #page {
-  background-color: light-dark(#ffffff, #1d1d1d);
+  background-color: light-dark(#ffffff, #000000);
   display: grid;
   max-width: 100vw;
   width: 100%;

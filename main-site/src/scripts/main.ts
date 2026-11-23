@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { ColorEnvironment } from 'three/examples/jsm/environments/ColorEnvironment.js';
 
 /* 
 
@@ -11,34 +13,23 @@ let scene : THREE.Scene | null = null;
 
 // Camera
 let camera : THREE.PerspectiveCamera | null = null;
+const camPos = new THREE.Vector3(0, 0, 3);
 const fov = 75;
 const aspect = 2;
 const near = 0.1;
-const far = 3;
+const far = 10;
 
 // Light
-let light : THREE.DirectionalLight | null = null;
-const lightColor = 0xfefefe;
-const lightInten = 1;
+let light : THREE.PointLight | null = null;
+const lightColor = 0xce9e00;
+const lightInten = 10;
 
 let renderer : THREE.WebGLRenderer | null = null;
 let timer : THREE.Timer | null = null;
 
-// TODO: External mesh object with menu popouts?
-
-// Mesh
-let cube : THREE.Mesh | null = null;
-let cubeMat = new THREE.MeshPhongMaterial(
-	{
-		color: 0x0f0f0f,
-		specular: 0xfefefe,
-		shininess: 10,
-	}
-);
-const bW = 1;
-const bH = 1;
-const bD = 1;
-const boxGeo = new THREE.BoxGeometry(bW, bH, bD);
+// Menu Mesh
+const loader = new GLTFLoader();
+let menuCube : THREE.Group | null = null;
 
 // Interaction
 let controls : OrbitControls | null = null;
@@ -63,7 +54,7 @@ function main() {
 
 	*/
 
-	function init() {
+	async function init() {
 		// Get canvas and create renderer
 		const canvas = document.querySelector('#cube');
 		if (canvas == null){
@@ -76,20 +67,28 @@ function main() {
 
 		// Camera
 		camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-		camera.position.z = 2;
+		camera.position.set(camPos.x, camPos.y, camPos.z);
 
 		// Scene
 		scene = new THREE.Scene();
+		const pmremGenerator = new THREE.PMREMGenerator(renderer);
+		scene.environment = pmremGenerator.fromScene(new ColorEnvironment( 0x202020 )).texture;
 
+		
 		// Light
-		light = new THREE.DirectionalLight(lightColor, lightInten);
+		light = new THREE.PointLight(lightColor, lightInten);
 		light.position.set(camera.position.x, camera.position.y, camera.position.z);
 
 		scene.add(light);
 
-		// Cube mesh
-		cube = new THREE.Mesh(boxGeo, cubeMat);
-		scene.add(cube);
+		// Load and add Menu Cube
+		try {
+			const gltf = loader.loadAsync('src/assets/models/WebsiteMenuCube.glb');
+			menuCube = (await gltf).scene
+			scene.add(menuCube);
+		} catch (error){
+			console.log(error);
+		}
 
 		// Controls
 		controls = new OrbitControls(camera, renderer.domElement);
@@ -104,47 +103,49 @@ function main() {
 
 		controls.update();
 
+		/* 
+		
+		------------------- Event Connections -------------------
+
+		*/
+
+		//----------------- Mouse movement
+		document.addEventListener('mousemove', (event) => {
+			event.preventDefault();
+			mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
+			mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
+		});
+
+		// ---------------- Camera grab/move 'start' and 'end'
+
+		// On interaction, stop rotation
+		controls?.addEventListener('start', () => {
+			// Stop rotation, create timer, set interaction bool
+			if (controls == null) return;
+			controls.autoRotate = false;
+
+			if (timer == null){
+				timer = new THREE.Timer();
+			}
+			timer.update();
+			isInteracting = true;
+		});
+
+		controls?.addEventListener('end', () => {
+			// Set end interaction time and set interaction bool
+			if (timer == null) return;
+			endTime = timer.getElapsed();
+			isInteracting = false;
+		});
+
 		// Raycasts
 		centerRay = new THREE.Raycaster(camera.position);
 		raycast = new THREE.Raycaster(camera.position);
+
+		animate();
 	}
 
 	init();
-
-	/* 
-	
-	------------------- Event Connections -------------------
-
-	*/
-
-	//----------------- Mouse movement
-	document.addEventListener('mousemove', (event) => {
-		event.preventDefault();
-		mousePos.x = (event.clientX / window.innerWidth) * 2 - 1;
-		mousePos.y = -(event.clientY / window.innerHeight) * 2 + 1;
-	});
-
-	// ---------------- Camera grab/move 'start' and 'end'
-
-	// On interaction, stop rotation
-	controls?.addEventListener('start', () => {
-		// Stop rotation, create timer, set interaction bool
-		if (controls == null) return;
-		controls.autoRotate = false;
-
-		if (timer == null){
-			timer = new THREE.Timer();
-		}
-		timer.update();
-		isInteracting = true;
-	});
-
-	controls?.addEventListener('end', () => {
-		// Set end interaction time and set interaction bool
-		if (timer == null) return;
-		endTime = timer.getElapsed();
-		isInteracting = false;
-	});
 
 	/* 
 	
@@ -160,7 +161,7 @@ function main() {
 			controls == null || 
 			renderer == null || 
 			scene == null ||
-			cube == null
+			menuCube == null
 		) return;
 
 		// Update Timer
@@ -188,10 +189,11 @@ function main() {
 		
 		controls.update();
 		light?.position.set(camera.position.x, camera.position.y, camera.position.z);
+		light?.rotation.set(camera.rotation.x, camera.rotation.y, camera.rotation.z);
 
 		// Center Ray for Cube Animations
 		centerRay?.setFromCamera(centerPos, camera);
-		const centerInter = centerRay?.intersectObject(cube);
+		const centerInter = centerRay?.intersectObject(menuCube);
 
 		if (centerInter != null && centerInter.length > 0){
 			const hit = centerInter[0];
@@ -200,7 +202,7 @@ function main() {
 
 		// Interaction Ray
 		raycast?.setFromCamera(mousePos, camera);
-		const interac = raycast?.intersectObject(cube);
+		const interac = raycast?.intersectObject(menuCube);
 
 		if (interac != null && interac.length > 0){
 			const hit = interac[0];
@@ -211,8 +213,6 @@ function main() {
 
 		requestAnimationFrame(animate);
 	}
-
-	requestAnimationFrame(animate);
 }
 
 main();
