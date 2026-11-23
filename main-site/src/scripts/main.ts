@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /* 
 
@@ -11,10 +12,11 @@ let scene : THREE.Scene | null = null;
 
 // Camera
 let camera : THREE.PerspectiveCamera | null = null;
+const camPos = new THREE.Vector3(0, 0, 3);
 const fov = 75;
 const aspect = 2;
 const near = 0.1;
-const far = 3;
+const far = 10;
 
 // Light
 let light : THREE.DirectionalLight | null = null;
@@ -26,19 +28,9 @@ let timer : THREE.Timer | null = null;
 
 // TODO: External mesh object with menu popouts?
 
-// Mesh
-let cube : THREE.Mesh | null = null;
-let cubeMat = new THREE.MeshPhongMaterial(
-	{
-		color: 0x0f0f0f,
-		specular: 0xfefefe,
-		shininess: 10,
-	}
-);
-const bW = 1;
-const bH = 1;
-const bD = 1;
-const boxGeo = new THREE.BoxGeometry(bW, bH, bD);
+// Menu Mesh
+const loader = new GLTFLoader();
+let menuCube : THREE.Group | null = null;
 
 // Interaction
 let controls : OrbitControls | null = null;
@@ -63,7 +55,7 @@ function main() {
 
 	*/
 
-	function init() {
+	async function init() {
 		// Get canvas and create renderer
 		const canvas = document.querySelector('#cube');
 		if (canvas == null){
@@ -76,7 +68,7 @@ function main() {
 
 		// Camera
 		camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-		camera.position.z = 2;
+		camera.position.set(camPos.x, camPos.y, camPos.z);
 
 		// Scene
 		scene = new THREE.Scene();
@@ -87,9 +79,14 @@ function main() {
 
 		scene.add(light);
 
-		// Cube mesh
-		cube = new THREE.Mesh(boxGeo, cubeMat);
-		scene.add(cube);
+		// Load and add Menu Cube
+		try {
+			const gltf = loader.loadAsync('src/assets/models/WebsiteMenuCube.glb');
+			menuCube = (await gltf).scene
+			scene.add(menuCube);
+		} catch (error){
+			console.log(error);
+		}
 
 		// Controls
 		controls = new OrbitControls(camera, renderer.domElement);
@@ -107,6 +104,8 @@ function main() {
 		// Raycasts
 		centerRay = new THREE.Raycaster(camera.position);
 		raycast = new THREE.Raycaster(camera.position);
+
+		animate();
 	}
 
 	init();
@@ -160,7 +159,7 @@ function main() {
 			controls == null || 
 			renderer == null || 
 			scene == null ||
-			cube == null
+			menuCube == null
 		) return;
 
 		// Update Timer
@@ -191,7 +190,7 @@ function main() {
 
 		// Center Ray for Cube Animations
 		centerRay?.setFromCamera(centerPos, camera);
-		const centerInter = centerRay?.intersectObject(cube);
+		const centerInter = centerRay?.intersectObject(menuCube);
 
 		if (centerInter != null && centerInter.length > 0){
 			const hit = centerInter[0];
@@ -200,7 +199,7 @@ function main() {
 
 		// Interaction Ray
 		raycast?.setFromCamera(mousePos, camera);
-		const interac = raycast?.intersectObject(cube);
+		const interac = raycast?.intersectObject(menuCube);
 
 		if (interac != null && interac.length > 0){
 			const hit = interac[0];
@@ -212,7 +211,7 @@ function main() {
 		requestAnimationFrame(animate);
 	}
 
-	requestAnimationFrame(animate);
+	//requestAnimationFrame(animate);
 }
 
 main();
