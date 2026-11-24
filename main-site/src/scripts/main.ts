@@ -25,11 +25,15 @@ const lightColor = 0xce9e00;
 const lightInten = 10;
 
 let renderer : THREE.WebGLRenderer | null = null;
-let timer : THREE.Timer | null = null;
+const timer = new THREE.Timer()
 
 // Menu Mesh
 const loader = new GLTFLoader();
 let menuCube : THREE.Group | null = null;
+
+// Animations
+let mixer : THREE.AnimationMixer | null = null;
+let clips : THREE.AnimationClip[] | null = null;
 
 // Interaction
 let controls : OrbitControls | null = null;
@@ -83,12 +87,28 @@ function main() {
 
 		// Load and add Menu Cube
 		try {
-			const gltf = loader.loadAsync('/assets/models/WebsiteMenuCube.glb');
-			menuCube = (await gltf).scene
+			const gltf = await loader.loadAsync('/assets/models/WebsiteMenuCube.glb');
+			menuCube = gltf.scene;
+			mixer = new THREE.AnimationMixer(menuCube);
+			clips = gltf.animations;
 			scene.add(menuCube);
 		} catch (error){
 			console.log(error);
 		}
+
+		// ------------------------------ TEST ANIMATIONS ------------------------------------
+
+		// PLAY ALL
+		clips?.forEach(function(clip) {
+			console.log(clip);
+			playAnimation(clip);
+		});
+
+		// PLAY ONE
+		// if (clips != null) {
+		// 	const i = clips[0];
+		// 	playAnimation(i);
+		// }
 
 		// Controls
 		controls = new OrbitControls(camera, renderer.domElement);
@@ -124,9 +144,6 @@ function main() {
 			if (controls == null) return;
 			controls.autoRotate = false;
 
-			if (timer == null){
-				timer = new THREE.Timer();
-			}
 			timer.update();
 			isInteracting = true;
 		});
@@ -164,12 +181,16 @@ function main() {
 			menuCube == null
 		) return;
 
-		// Update Timer
+		// Update Time
 		var currentTime = 0;
-		if (timer !== null){
-			timer.update();
-			currentTime = timer.getElapsed();
-		}
+		let deltaSeconds : number = 0;
+
+		timer.update();
+		currentTime = timer.getElapsed();
+		deltaSeconds = timer.getDelta();
+
+		// Update Mixer
+		mixer?.update(deltaSeconds);
 
 		// Check if resize
 		if (resizeRenderToDisplaySize(renderer)){
@@ -181,8 +202,8 @@ function main() {
 		// Update controls and set light pos to current camera pos
 		if (timer !== null && (!isInteracting) && (currentTime > endTime + waitDuration)){
 			controls.autoRotate = true;
-			timer.dispose();
-			timer = null;
+			// timer.dispose();
+			// timer = null;
 			currentTime = 0;
 			endTime = 0;
 		}
@@ -216,6 +237,20 @@ function main() {
 }
 
 main();
+
+/*
+
+---------------------- Animations -------------------------
+
+*/
+
+function playAnimation(clip : THREE.AnimationClip) {
+	const action = mixer?.clipAction(clip);
+	if (action == null) return;
+	action.setLoop(THREE.LoopOnce, 1);
+	action.clampWhenFinished = true;
+	action.play();
+}
 
 /*
 
