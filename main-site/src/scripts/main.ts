@@ -25,7 +25,7 @@ const lightColor = 0xce9e00;
 const lightInten = 10;
 
 let renderer : THREE.WebGLRenderer | null = null;
-let timer : THREE.Timer | null = null;
+const timer = new THREE.Timer()
 
 // Menu Mesh
 const loader = new GLTFLoader();
@@ -97,10 +97,18 @@ function main() {
 		}
 
 		// ------------------------------ TEST ANIMATIONS ------------------------------------
+
+		// PLAY ALL
 		clips?.forEach(function(clip) {
 			console.log(clip);
 			playAnimation(clip);
 		});
+
+		// PLAY ONE
+		// if (clips != null) {
+		// 	const i = clips[0];
+		// 	playAnimation(i);
+		// }
 
 		// Controls
 		controls = new OrbitControls(camera, renderer.domElement);
@@ -136,9 +144,6 @@ function main() {
 			if (controls == null) return;
 			controls.autoRotate = false;
 
-			if (timer == null){
-				timer = new THREE.Timer();
-			}
 			timer.update();
 			isInteracting = true;
 		});
@@ -179,11 +184,10 @@ function main() {
 		// Update Time
 		var currentTime = 0;
 		let deltaSeconds : number = 0;
-		if (timer !== null){
-			timer.update();
-			currentTime = timer.getElapsed();
-			deltaSeconds = timer.getDelta();
-		}
+
+		timer.update();
+		currentTime = timer.getElapsed();
+		deltaSeconds = timer.getDelta();
 
 		// Update Mixer
 		mixer?.update(deltaSeconds);
@@ -198,8 +202,8 @@ function main() {
 		// Update controls and set light pos to current camera pos
 		if (timer !== null && (!isInteracting) && (currentTime > endTime + waitDuration)){
 			controls.autoRotate = true;
-			timer.dispose();
-			timer = null;
+			// timer.dispose();
+			// timer = null;
 			currentTime = 0;
 			endTime = 0;
 		}
@@ -242,7 +246,10 @@ main();
 
 function playAnimation(clip : THREE.AnimationClip) {
 	const action = mixer?.clipAction(clip);
-	action?.play();
+	if (action == null) return;
+	action.setLoop(THREE.LoopOnce, 1);
+	action.clampWhenFinished = true;
+	action.play();
 }
 
 /*
