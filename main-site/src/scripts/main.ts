@@ -13,7 +13,7 @@ let scene : THREE.Scene | null = null;
 
 // Camera
 let camera : THREE.PerspectiveCamera | null = null;
-const camPos = new THREE.Vector3(0, 0, 3);
+const camPos = new THREE.Vector3(0, 0, 4);
 const fov = 75;
 const aspect = 2;
 const near = 0.1;
@@ -83,7 +83,7 @@ function main() {
 
 		// Load and add Menu Cube
 		try {
-			const gltf = loader.loadAsync('src/assets/models/WebsiteMenuCube.glb');
+			const gltf = loader.loadAsync('/assets/models/WebsiteMenuCube.glb');
 			menuCube = (await gltf).scene
 			scene.add(menuCube);
 		} catch (error){
