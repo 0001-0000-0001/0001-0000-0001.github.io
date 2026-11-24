@@ -31,6 +31,10 @@ let timer : THREE.Timer | null = null;
 const loader = new GLTFLoader();
 let menuCube : THREE.Group | null = null;
 
+// Animations
+let mixer : THREE.AnimationMixer | null = null;
+let clips : THREE.AnimationClip[] | null = null;
+
 // Interaction
 let controls : OrbitControls | null = null;
 let isInteracting : boolean = false;
@@ -83,12 +87,20 @@ function main() {
 
 		// Load and add Menu Cube
 		try {
-			const gltf = loader.loadAsync('/assets/models/WebsiteMenuCube.glb');
-			menuCube = (await gltf).scene
+			const gltf = await loader.loadAsync('/assets/models/WebsiteMenuCube.glb');
+			menuCube = gltf.scene;
+			mixer = new THREE.AnimationMixer(menuCube);
+			clips = gltf.animations;
 			scene.add(menuCube);
 		} catch (error){
 			console.log(error);
 		}
+
+		// ------------------------------ TEST ANIMATIONS ------------------------------------
+		clips?.forEach(function(clip) {
+			console.log(clip);
+			playAnimation(clip);
+		});
 
 		// Controls
 		controls = new OrbitControls(camera, renderer.domElement);
@@ -164,12 +176,17 @@ function main() {
 			menuCube == null
 		) return;
 
-		// Update Timer
+		// Update Time
 		var currentTime = 0;
+		let deltaSeconds : number = 0;
 		if (timer !== null){
 			timer.update();
 			currentTime = timer.getElapsed();
+			deltaSeconds = timer.getDelta();
 		}
+
+		// Update Mixer
+		mixer?.update(deltaSeconds);
 
 		// Check if resize
 		if (resizeRenderToDisplaySize(renderer)){
@@ -216,6 +233,17 @@ function main() {
 }
 
 main();
+
+/*
+
+---------------------- Animations -------------------------
+
+*/
+
+function playAnimation(clip : THREE.AnimationClip) {
+	const action = mixer?.clipAction(clip);
+	action?.play();
+}
 
 /*
 
